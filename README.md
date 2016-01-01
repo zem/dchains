@@ -14,3 +14,10 @@ You can sign every message tag and every property.
 
 You can also do automatic OCR and perform tasks on various uploads. 
 
+
+How will it work: 
+
+The repo demonstration script that shows how data will be organized on the system, however there are some more proof of concepts lying around here. In general a File is saved with its SHA256sum as filename in a folder with that Checksum and at least one Gnupg Signature next to it in a seperate file. 
+
+The same directory houses gpg signed yaml files that collect attributes like tags, mime type, common names and attachments. An attribute file can also be revoked. 
+
