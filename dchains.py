@@ -4,6 +4,7 @@ import gnupg
 import sys, os
 import magic
 import yaml
+from datetime import datetime
 
 #if not 0 in sys.argv:
 #	print("Usage: dchain.py file Tag1 Tag2 TagN ....")
@@ -30,7 +31,7 @@ f.close()
 sha.update(content)
 chksum=sha.hexdigest()
 
-workdir=storbase+chksum[0:15]+"/"+chksum[16:31]+"/"+chksum[32:47]+"/"+chksum[48:63]+"/"+chksum
+workdir=storbase+chksum[0:8]+"/"+chksum[8:16]+"/"+chksum[16:24]+"/"+chksum
 
 if not os.path.isdir(workdir):
 	os.makedirs(workdir)
@@ -66,6 +67,7 @@ sigsuffix="_"+keyid+".sig"
 def set_attr(chksum, name, val):
 	foo={}
 	foo[chksum]={}
+	foo[chksum]["ts"]=str(datetime.utcnow())
 	foo[chksum][name]=val
 	attrsig=gpg.sign(yaml.dump(foo, default_flow_style=False),
 		keyid=keyid,
