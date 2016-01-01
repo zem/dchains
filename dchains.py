@@ -5,23 +5,26 @@ import sys, os
 import magic
 import yaml
 
-if not 0 in sys.argv:
-	print("Usage: dchain.py file Tag1 Tag2 TagN ....")
-	exit(1)
+#if not 0 in sys.argv:
+#	print("Usage: dchain.py file Tag1 Tag2 TagN ....")
+#	exit(1)
 
-if not os.path.exists(sys.argv[0]):
-	print("File "+sys.argv[0]+" does not exists!")
+if not os.path.exists(sys.argv[1]):
+	print("File "+sys.argv[1]+" does not exists!")
 	exit(2)
 
-storbase=os.env["HOME"]."/.dchains/"
 
-filepath=sys.argv[0]
-tags=sys.argv[1:]
+storbase=os.environ["HOME"]+"/.dchains/"
+
+filepath=sys.argv[1]
+tags=sys.argv[2:]
+
+print("adding "+filepath+" to document chains")
 
 gpg=gnupg.GPG(gpgbinary='gpg2')
-sha=hashlib.sha512()
+sha=hashlib.sha256()
 
-f=open(sys.argv[0], "rb")
+f=open(filepath, "rb")
 content=f.read()
 f.close()
 sha.update(content)
@@ -29,8 +32,8 @@ chksum=sha.hexdigest()
 
 workdir=storbase+chksum[0:15]+"/"+chksum[16:31]+"/"+chksum[32:47]+"/"+chksum[48:63]+"/"+chksum
 
-if not os.path.isdir(path):
-	os.makedirs(path)
+if not os.path.isdir(workdir):
+	os.makedirs(workdir)
 
 
 datfile=workdir+"/"+chksum+".dat"
@@ -46,13 +49,39 @@ mimetype=mime.buffer(content)
 keyid='FECB1F75'
 sigfile=workdir+"/"+chksum+"_"+keyid+".gpg"
 
-signature=gpg.sign(content, keyid=keyid, binary=True)
+signature=gpg.sign(content, detach=True, binary=True, keyid=keyid)
 
+#print(signature)
 f=open(sigfile, "wb")
-f.write(signature)
+f.write(signature.data)
 f.close()
 
 f=open(datfile, "wb")
 f.write(content)
 f.close()
+
+sigprefix=workdir+"/"
+sigsuffix="_"+keyid+".sig"
+
+def set_attr(chksum, name, val):
+	foo={}
+	foo[chksum]={}
+	foo[chksum][name]=val
+	attrsig=gpg.sign(yaml.dump(foo, default_flow_style=False),
+		keyid=keyid,
+	)
+	sha=hashlib.sha256()
+	sha.update(attrsig.data)
+	attrchksum=sha.hexdigest()
+	f=open(sigprefix+attrchksum+"_"+name+sigsuffix, "wb")
+	f.write(attrsig.data)
+	f.close()
+
+print("Setting mimetype: "+mimetype)
+set_attr(chksum, "mimetype", mimetype)
+print("Setting name: "+os.path.basename(filepath))
+set_attr(chksum, "name", os.path.basename(filepath))
+for tag in tags:
+	print("Setting tag: "+tag)
+	set_attr(chksum, "tag", tag)
 
