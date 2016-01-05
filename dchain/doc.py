@@ -1,4 +1,10 @@
 
+class doc():
+	def __init__(filename='', docid=''):
+
+
+
+
 #!/usr/bin/python3
 import hashlib
 import gnupg
