@@ -1,4 +1,3 @@
-
 #!/usr/bin/python3
 import hashlib
 import gnupg
@@ -6,6 +5,37 @@ import sys, os
 import magic
 import yaml
 from datetime import datetime
+
+
+
+
+
+class dcattr()
+	ini
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #if not 1 in sys.argv:
 #	print("Usage: dchain.py file Tag1 Tag2 TagN ....")
