@@ -7,11 +7,36 @@ import yaml
 from datetime import datetime
 
 
-
-
-
 class dcattr()
-	ini
+	""" 
+	__init__
+	--------
+	init always needs a document object to attach to, it can't stay alone
+	however it can either be created by setting name value coment and ts 
+	or it can be loaded by providing an attribute id 
+	"""
+	def __init__(self, doc, 
+		name='', value='', comment='', ts=datetime.utcnow(),
+		attrid='',
+	):
+		# link gpg over to this object
+		self.gpg=doc.gpg
+		if attrid=='':
+			self.stored=False
+			self.a={
+				doc.docid=>{
+					'name'=>name,
+					'value'=>value,
+					'comment'=>comment,
+					'ts'=>str(ts),
+				}
+			}
+			self.ts=ts
+			self.doc=doc
+		else:
+			self.stored=True
+			self.attrid=attrid
+
 
 
 
