@@ -46,6 +46,7 @@ class doc():
 		self.filename=filename
 		self.docid=docid
 		self.contenttype=contenttype
+		self.dcattrs=[]
 		self.keyid=keyid
 		self.storebase=storebase
 		self.gpgbin=gpgbin
@@ -136,6 +137,14 @@ class doc():
 		if not os.path.exists(self.contentfile()):
 			raise Exception("this document ".self.contentfile()." does not exists in dchains storage")
 		# TODO load attributes to object
+	def _load_dcattrs(self):
+		# as soon as we have a docid we also have workdir()
+		for dcattr_file in os.listdir(self.workdir())
+			if re.match('.*\.dcattr$', dcattr_file):
+				self.dcattrs.append(
+					dcattr(self, dcattrfilename=dcattr_file)
+				)
+		
 	def _detect_content_type(self)
 		# we need that later, but i guess we might 
 		# move that also then 
