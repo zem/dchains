@@ -41,7 +41,6 @@ class doc():
 		storebase=os.environ["HOME"]+"/.dchains/",
 		gpgbin='gpg2',
 	):
-		
 		# copy all that neccessary stuff to self
 		self.path=path
 		self.filename=filename
@@ -52,7 +51,6 @@ class doc():
 		self.gpgbin=gpgbin
 		self.gpg=gnupg.GPG(gpgbinary=gpgbin)
 		self.sha=hashlib.sha256()
-
 		# we implement three modes , 
 		# only a document id 
 		# only a filename 
@@ -84,32 +82,60 @@ class doc():
 	stores the document and to the storage, or updates the stored document 
 	in the storage
 	"""
-	def save(self):
+	def save_all(self):
+		self.save_content()
+		self.sign()
+		#self.save_attributes()
+
+	def save_content(self):
 		# store the document and all its objects 
 		# to the repository
+		self._require_memory_content()
+		if os.path.exists(self.contentfile()):
+			# TODO Check here if the document on the disk really is the document in memory 
+			return
+		f=open(self.contentfile(), "wb")
+		f.write(self.content)
+		f.close()
 	
 	"""
 	_load_filename
 	---------------------
-	this internal method is used to load the content of a file into 
-	the object to calculate its checksum. This could be a bit memory 
-	intense for big documents. 
+	this internal method loads a filename into the objects content 
+	and continued with _load_content()
 	"""
-	def _load_filename(self)
-		filepath=self.path+"/"+self.filename
-		if not os.path.exists(filepath):
-			raise Exception("File "+filepath+" does not exists!")
-		f=open(filepath, "rb")
-		self.content=f.read()
+	def _load_filename(self, filename)
+		if not os.path.exists(filename):
+			raise Exception("File "+filename+" does not exists!")
+		f=open(filename, "rb")
+		self._load_content(f.read())
 		f.close()
 	
 	"""
-	_load_content_from_fs
+	_load_content
 	---------------------
-	this internal method is used to load the content of a file into 
-	the object to calculate its checksum. This could be a bit memory 
-	intense for big documents. 
+	this internal method gets the documents content as an argument, 
+	it then calculates the sha256 checksum and the working path
 	"""
+	def _load_content(self, content):
+		if content=='':
+			raise Exception("content is empty, thats stupid!")
+		self.content=content
+		sha.update(content)
+		if self.docid=='':
+			self.docid=sha.hexdigest()
+		elif self.docid != sha.hexdigest():
+			raise Exception("uuups, we loaded a document to the content but its checksum does not match our docid")
+		
+		# TODO as soon as I have the attributes ready, 
+		# we make an attribute detection here
+		
+	def _load_docid(self, docid):
+		# there is not yet anything to do here yet 
+		# but to raise an exception if the document is not in the pool
+		if not os.path.exists(self.contentfile()):
+			raise Exception("this document ".self.contentfile()." does not exists in dchains storage")
+		# TODO load attributes to object
 	def _detect_content_type(self)
 		# we need that later, but i guess we might 
 		# move that also then 
@@ -119,7 +145,10 @@ class doc():
 			self.mime = magic.open(magic.MAGIC_MIME) 
 			self.mime.load()
 			self.contenttype=mime.buffer(content) 
-	
+	def _require_memory_content(self):
+		if self.content=="":
+			self._load_filename(self.contentfile())
+			
 	def workdir(self):
 		if self.docid == '':
 			raise Exception("no docid which is needed to create the docdir/workdir")
@@ -129,18 +158,24 @@ class doc():
 		if not os.path.isdir(workdir):
 			os.makedirs(workdir)
 		return workdir
+	def contentfile(self):
+		return self.workdir()+"/"+self.docid+".dat"
+	def sign(self):
+		sigfile=self.workdir()+"/"+self.docid+"_"+self.keyid+".gpg"
+		if os.path.exists(sigfile):
+			raise Exception("signature "+sigfile+" is already there")
+		self._require_memory_content()
+		signature=self.gpg.sign(self.content, 
+			detach=True, 
+			binary=True, 
+			keyid=self.keyid
+		)
+		f=open(sigfile, "wb")
+		f.write(signature.data)
+		f.close()
 
 
 
-
-
-
-		if self.docid=="":
-			sha.update(self.content)
-			self.docid=sha.hexdigest()
-		else:
-			sha.update(self.content)
-			self.docid=sha.hexdigest()
 
 
 gpg=gnupg.GPG(gpgbinary='gpg2')
@@ -175,9 +210,6 @@ f=open(sigfile, "wb")
 f.write(signature.data)
 f.close()
 
-f=open(datfile, "wb")
-f.write(content)
-f.close()
 
 sigprefix=workdir+"/"
 sigsuffix="_"+keyid+".sig"
