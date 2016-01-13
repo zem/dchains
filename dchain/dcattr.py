@@ -47,6 +47,7 @@ class dcattr()
 		f.close()
 		verified=self.gpg.verify(content)
 		if not verified: raise Exception("Signature could not be verified!")
+		self.verified=verified	# can be used to query the who and where 
 		sha=hashlib.sha256()
 		sha.update(content)
 		if sha.hexdigest() != dcattrid:

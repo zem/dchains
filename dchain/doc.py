@@ -47,6 +47,9 @@ class doc():
 		self.docid=docid
 		self.contenttype=contenttype
 		self.dcattrs=[]
+		self.revoked_dcattrs={}
+		self.dcattr_by_name={}
+		self.dcattr_by_id={}
 		self.keyid=keyid
 		self.storebase=storebase
 		self.gpgbin=gpgbin
@@ -141,11 +144,26 @@ class doc():
 		# as soon as we have a docid we also have workdir()
 		for dcattr_file in os.listdir(self.workdir())
 			if re.match('.*\.dcattr$', dcattr_file):
-				self.dcattrs.append(
-					dcattr(self, dcattrfilename=dcattr_file)
-				)
-		
-	def _detect_content_type(self)
+				self.append_dcattr(dcattr(self, dcattrfilename=dcattr_file))
+	def append_dcattr(self, dcattr):
+		self.dcattr_by_id[dcattr.dcattrid]=dcattr
+		if not dcattr.name() in self.dcattr_by_name: self.dcattr_by_name[dcattr.name()]=[]
+		if not dcattr.dcattrid in self.revoked_dcattrs:
+			self.dcattr_by_name[dcattr.name()].append(dcattr)
+		if dcattr.name() == "revoke":
+			self.revoked_dcattrs[dcattr.value()]=dcattr
+			# we may need to revoke a stored value as well
+			if dcattr.value() in self.dcattr_by_id:
+				revoked_attr=self.dcattr_by_id[dcattr.value()]
+				# delete revoked_attr from named list
+				if not revoked_attr.name() in self.dcattr_by_name: self.dcattr_by_name[revoked_attr.name()]=[]
+				index=0
+				for a in self.dcattr_by_name[revoked_attr.name()]:
+					if a==revoked_attr:
+						del self.dcattr_by_name[revoked_attr.name()][index]
+					else:
+						index=index+1
+	def _detect_content_type(self):
 		# we need that later, but i guess we might 
 		# move that also then 
 		if self.content == '':
@@ -157,7 +175,6 @@ class doc():
 	def _require_memory_content(self):
 		if self.content=="":
 			self._load_filename(self.contentfile())
-			
 	def workdir(self):
 		if self.docid == '':
 			raise Exception("no docid which is needed to create the docdir/workdir")
@@ -166,9 +183,9 @@ class doc():
 		workdir=self.storebase+self.docdir
 		if not os.path.isdir(workdir):
 			os.makedirs(workdir)
-		return workdir
+		return(workdir)
 	def contentfile(self):
-		return self.workdir()+"/"+self.docid+".dat"
+		return(self.workdir()+"/"+self.docid+".dat")
 	def sign(self):
 		sigfile=self.workdir()+"/"+self.docid+"_"+self.keyid+".gpg"
 		if os.path.exists(sigfile):
@@ -182,7 +199,11 @@ class doc():
 		f=open(sigfile, "wb")
 		f.write(signature.data)
 		f.close()
-
-
-
-
+	def dcattr_values_dict(self, name):
+		names={}
+		for a in self.dcattr_by_name[name]:
+			if not a.value() in names:
+				names[a.value()]=a
+		return(names)
+	def dcattr_values(self, name):
+		return(self.dcattr_values_dict(name).keys())
