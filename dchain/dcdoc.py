@@ -36,7 +36,6 @@ class dcdoc():
 	- gpgbin: defaults to gpg2
 	"""
 	def __init__(self, filename='', dcdocid='', content='',
-		contenttype='', 
 		keyid='',
 		storebase=os.environ["HOME"]+"/.dchains/",
 		gpgbin='gpg2',
@@ -45,7 +44,6 @@ class dcdoc():
 		self.path=path
 		self.filename=filename
 		self.dcdocid=dcdocid
-		self.contenttype=contenttype
 		self.dcattrs=[]
 		self.revoked_dcattrs={}
 		self.dcattr_by_name={}
@@ -163,15 +161,6 @@ class dcdoc():
 						del self.dcattr_by_name[revoked_attr.name()][index]
 					else:
 						index=index+1
-	def _detect_content_type(self):
-		# we need that later, but i guess we might 
-		# move that also then 
-		if self.content == '':
-			raise Exception("I have no content stored in the object")
-		if self.contenttype == '':
-			self.mime = magic.open(magic.MAGIC_MIME) 
-			self.mime.load()
-			self.contenttype=mime.buffer(content) 
 	def _require_memory_content(self):
 		if self.content=="":
 			self._load_filename(self.contentfile())
@@ -207,3 +196,44 @@ class dcdoc():
 		return(names)
 	def dcattr_values(self, name):
 		return(self.dcattr_values_dict(name).keys())
+	def dcattr_add(self, name, value, comment=""):
+		a=dcattr(self,
+			name=name,
+			value=value,
+			comment=comment,
+		);
+		a.save()
+		self.append_dcattr(a)
+	def dcattr_revoke(self, dcattrid, comment=""):
+		self.dcattr_add('revoke', dcattrid, comment)
+	"""
+	content_type()
+	--------------
+	returns the content_type of the document if any content type is there. 
+	This method first checks for available attributes if there is no attribute 
+	it uses magic to detect the content type and stores the result as a documents attribute
+	"""
+	def content_type(self, ctype=""):
+		ct=self.dcattr_values('content-type')
+		if len(ct)>0:
+			# we have a content type set for the object
+			if ctype != "" and ct[0] != ctype:
+				# set new content type 
+				oldattrid=self.dcattr_values_dict('content-type')[ct[0]].dcattrid
+				self.dcattr_add("content-type", ctype, "set via content_type() param")
+				self.dcattr_revoke(oldattrid)
+				return ctype
+			elif ctype != "" and ct[0] == ctype:
+				return ctype
+			else:
+				return ct[0]
+		else:
+			# there is no mimetype set yet to this object
+			if ctype=='': 
+				if self.content == '':
+					raise Exception("I have no content stored in the object")
+				mime = magic.open(magic.MAGIC_MIME) 
+				mime.load()
+				ctype=mime.buffer(self.content)
+			self.dcattr_add("content-type", ctype, "set via content_type() param")
+			return ctype
