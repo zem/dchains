@@ -30,11 +30,11 @@ class dcattr()
 			dcattrid=re.sub('\.dcattr$', '', dcattrfilename)
 		if dcattrid=='':
 			self.a={
-				doc.docid=>{
-					'name'=>name,
-					'value'=>value,
-					'comment'=>comment,
-					'ts'=>str(ts),
+				doc.docid: {
+					'name': name,
+					'value': value,
+					'comment': comment,
+					'ts': str(ts),
 				}
 			}
 			self.ts=ts
