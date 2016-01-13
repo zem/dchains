@@ -17,7 +17,7 @@ class dcdoc()
 ===========
 
 """
-class doc():
+class dcdoc():
 	"""
 	__init__
 	--------
@@ -30,12 +30,12 @@ class doc():
 	- path: the path where the file is located (defaults to working dir)
 	- filename: the filename to be loaded
 	- content: the documents content, if there is no name yet on filesystem
-	- docid: the document id (sha256 hexadecimal checksum over the content)
+	- dcdocid: the document id (sha256 hexadecimal checksum over the content)
 	- keyid: which keyid should be used to sign documents and attachments
 	- storebase: The directory where the document chains storage is located
 	- gpgbin: defaults to gpg2
 	"""
-	def __init__(self, filename='', docid='', content='',
+	def __init__(self, filename='', dcdocid='', content='',
 		contenttype='', 
 		keyid='',
 		storebase=os.environ["HOME"]+"/.dchains/",
@@ -44,7 +44,7 @@ class doc():
 		# copy all that neccessary stuff to self
 		self.path=path
 		self.filename=filename
-		self.docid=docid
+		self.dcdocid=dcdocid
 		self.contenttype=contenttype
 		self.dcattrs=[]
 		self.revoked_dcattrs={}
@@ -61,20 +61,20 @@ class doc():
 		# content and a filename given
 		# there is something odd if we have both or none 
 		#  at initialization
-		if docid=="" and fileaname=="" and content=="": 
-			raise Exception("please set either content or docid or give a filename to load")
+		if dcdocid=="" and fileaname=="" and content=="": 
+			raise Exception("please set either content or dcdocid or give a filename to load")
 		
-		if docid!="" and fileaname!="": 
-			raise Exception("filename and docid was given")
+		if dcdocid!="" and fileaname!="": 
+			raise Exception("filename and dcdocid was given")
 		
-		if docid!="" and content!="": 
-			raise Exception("content and docid was given")
+		if dcdocid!="" and content!="": 
+			raise Exception("content and dcdocid was given")
 		
 		if filename!="" and content!="": 
 			raise Exception("content and filename was given")
 	
-		if docid!='':
-			self._load_docid(docid)
+		if dcdocid!='':
+			self._load_dcdocid(dcdocid)
 		elif filename!='';
 			self._load_filename(filename)
 		elif content!='';
@@ -126,22 +126,22 @@ class doc():
 			raise Exception("content is empty, thats stupid!")
 		self.content=content
 		sha.update(content)
-		if self.docid=='':
-			self.docid=sha.hexdigest()
-		elif self.docid != sha.hexdigest():
-			raise Exception("uuups, we loaded a document to the content but its checksum does not match our docid")
+		if self.dcdocid=='':
+			self.dcdocid=sha.hexdigest()
+		elif self.dcdocid != sha.hexdigest():
+			raise Exception("uuups, we loaded a document to the content but its checksum does not match our dcdocid")
 		
 		# TODO as soon as I have the attributes ready, 
 		# we make an attribute detection here
 		
-	def _load_docid(self, docid):
+	def _load_dcdocid(self, dcdocid):
 		# there is not yet anything to do here yet 
 		# but to raise an exception if the document is not in the pool
 		if not os.path.exists(self.contentfile()):
 			raise Exception("this document ".self.contentfile()." does not exists in dchains storage")
 		# TODO load attributes to object
 	def _load_dcattrs(self):
-		# as soon as we have a docid we also have workdir()
+		# as soon as we have a dcdocid we also have workdir()
 		for dcattr_file in os.listdir(self.workdir())
 			if re.match('.*\.dcattr$', dcattr_file):
 				self.append_dcattr(dcattr(self, dcattrfilename=dcattr_file))
@@ -176,8 +176,8 @@ class doc():
 		if self.content=="":
 			self._load_filename(self.contentfile())
 	def workdir(self):
-		if self.docid == '':
-			raise Exception("no docid which is needed to create the docdir/workdir")
+		if self.dcdocid == '':
+			raise Exception("no dcdocid which is needed to create the docdir/workdir")
 		if not self.docdir:
 			self.docdir=chksum[0:8]+"/"+chksum[8:16]+"/"+chksum[16:24]+"/"+chksum
 		workdir=self.storebase+self.docdir
@@ -185,9 +185,9 @@ class doc():
 			os.makedirs(workdir)
 		return(workdir)
 	def contentfile(self):
-		return(self.workdir()+"/"+self.docid+".dat")
+		return(self.workdir()+"/"+self.dcdocid+".dat")
 	def sign(self):
-		sigfile=self.workdir()+"/"+self.docid+"_"+self.keyid+".gpg"
+		sigfile=self.workdir()+"/"+self.dcdocid+"_"+self.keyid+".gpg"
 		if os.path.exists(sigfile):
 			raise Exception("signature "+sigfile+" is already there")
 		self._require_memory_content()
