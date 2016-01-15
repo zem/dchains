@@ -36,22 +36,23 @@ class dcdoc():
 	- gpgbin: defaults to gpg2
 	"""
 	def __init__(self, filename='', dcdocid='', content='',
-		keyid='',
-		storebase=os.environ["HOME"]+"/.dchains/",
-		gpgbin='gpg2',
+		storage="default",
+		config=dchain.dcconf(),
 	):
 		# copy all that neccessary stuff to self
-		self.path=path
 		self.filename=filename
 		self.dcdocid=dcdocid
+		
 		self.dcattrs=[]
 		self.revoked_dcattrs={}
 		self.dcattr_by_name={}
 		self.dcattr_by_id={}
-		self.keyid=keyid
-		self.storebase=storebase
-		self.gpgbin=gpgbin
-		self.gpg=gnupg.GPG(gpgbinary=gpgbin)
+		
+		self.storage=storage
+		self.keyid=config.storage[storage]['gpg_keyid']
+		self.storebase=config.storage[storage]['url']
+		self.gpgbin=config.storage[storage]['gpg_bin']
+		self.gpg=gnupg.GPG(gpgbinary=config.storage[storage]['gpg_bin'])
 		self.sha=hashlib.sha256()
 		# we implement three modes , 
 		# only a document id 
