@@ -10,6 +10,7 @@ import gnupg
 import sys, os
 import magic
 import yaml
+import re
 from datetime import datetime
 from dchain.dcattr import * 
 from dchain.dcconf import *
@@ -45,12 +46,13 @@ class dcdoc():
 		# copy all that neccessary stuff to self
 		self.filename=filename
 		self.dcdocid=dcdocid
-		
+	
 		self.dcattrs=[]
 		self.revoked_dcattrs={}
 		self.dcattr_by_name={}
 		self.dcattr_by_id={}
 		
+		self.config=config
 		self.storage=storage
 		self.keyid=config.storage[storage]['gpg_keyid']
 		self.storebase=config.storage[storage]['url']
@@ -131,18 +133,19 @@ class dcdoc():
 			self.dcdocid=self.sha.hexdigest()
 		elif self.dcdocid != self.sha.hexdigest():
 			raise Exception("uuups, we loaded a document to the content but its checksum does not match our dcdocid")
-		
-		# TODO as soon as I have the attributes ready, 
-		# we make an attribute detection here
+		# load attributes, too if there are any
+		self._load_dcattrs()
 		
 	def _load_dcdocid(self, dcdocid):
 		# there is not yet anything to do here yet 
 		# but to raise an exception if the document is not in the pool
 		if not os.path.exists(self.contentfile()):
 			raise Exception("this document "+self.contentfile()+" does not exists in dchains storage")
-		# TODO load attributes to object
+		# load attributes to object
+		self._load_dcattrs()
 	def _load_dcattrs(self):
 		# as soon as we have a dcdocid we also have workdir()
+		if not os.path.exists(self.workdir()): return 
 		for dcattr_file in os.listdir(self.workdir()):
 			if re.match('.*\.dcattr$', dcattr_file):
 				self.append_dcattr(dcattr(self, dcattrfilename=dcattr_file))
@@ -179,15 +182,17 @@ class dcdoc():
 	def contentfile(self):
 		return(self.workdir()+"/"+self.dcdocid+".dat")
 	def sign(self):
-		sigfile=self.workdir()+"/"+self.dcdocid+"_"+self.keyid+".gpg"
-		if os.path.exists(sigfile):
-			raise Exception("signature "+sigfile+" is already there")
 		self._require_memory_content()
 		signature=self.gpg.sign(self.content, 
 			detach=True, 
 			binary=True, 
 			keyid=self.keyid
 		)
+		sha=hashlib.sha256()
+		sha.update(signature.data)
+		sigfile=self.workdir()+"/"+sha.hexdigest()+".signature"
+		if os.path.exists(sigfile):
+			raise Exception("signature "+sigfile+" is already there")
 		f=open(sigfile, "wb")
 		f.write(signature.data)
 		f.close()
@@ -244,42 +249,42 @@ class dcdoc():
 		if self.newer_version:
 			return self.newer_version
 		for docid in self.dcattr_values('newer_version'):
-			self.newer_version=dcdocs(docid=docid, storage=self.storage, config=self.config)
+			self.newer_version=dcdoc(dcdocid=docid, storage=self.storage, config=self.config)
 			return self.newer_version
 		return None
 	def older_version(self):
 		if self.older_version:
 			return self.older_version
 		for docid in self.dcattr_values('older_version'):
-			self.older_version=dcdocs(docid=docid, storage=self.storage, config=self.config)
+			self.older_version=dcdoc(dcdocid=docid, storage=self.storage, config=self.config)
 			return self.older_version
 		return None
 	def sources(self):
-		if not self.source_docs:
+		if not hasattr(self, 'source_docs'):
 			self.source_docs={}
 		sdocs=[]
 		for docid in self.dcattr_values('source'):
 			if not docid in self.source_docs:
-				self.source_docs[docid]=dcdocs(docid=docid, storage=self.storage, config=self.config)
+				self.source_docs[docid]=dcdoc(dcdocid=docid, storage=self.storage, config=self.config)
 			sdocs.append(self.source_docs[docid])
 		return sdocs
 	def attachments(self):
-		if not self.attached_docs:
+		if not hasattr(self, 'attached_docs'):
 			self.attached_docs={}
 		adocs=[]
 		for docid in self.dcattr_values('attachment'):
 			if not docid in self.attached_docs:
-				self.attached_docs[docid]=dcdocs(docid=docid, storage=self.storage, config=self.config)
+				self.attached_docs[docid]=dcdoc(dcdocid=docid, storage=self.storage, config=self.config)
 			adocs.append(self.attached_docs[docid])
 		return adocs
 	def add_attachment(self, doc, comment='via add_attachment() from '):
 		# attach a document to this object
-		self.dcattr_add('attachment', doc.docid, comment)
-		doc.dcattr_add('source', self.docid, comment)
+		self.dcattr_add('attachment', doc.dcdocid, comment)
+		doc.dcattr_add('source', self.dcdocid, comment)
 	def add_source(self, doc, comment='via add_source from '):
 		# attach a document to this object
-		self.dcattr_add('source', doc.docid, comment)
-		doc.dcattr_add('attachment', self.docid, comment)
+		self.dcattr_add('source', doc.dcdocid, comment)
+		doc.dcattr_add('attachment', self.dcdocid, comment)
 	def names(self):
 		return self.dcattr_values("name")
 	def names_dict(self):

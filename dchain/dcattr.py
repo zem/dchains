@@ -46,7 +46,7 @@ class dcattr():
 			}
 			self.ts=ts
 		else:
-			self._load_dcattrid(self, dcattrid)
+			self._load_dcattrid(dcattrid)
 	def _load_dcattrid(self, dcattrid):
 		self.dcattrid=dcattrid
 		f=open(self.doc.workdir()+"/"+dcattrid+".dcattr", "rb")
@@ -61,8 +61,8 @@ class dcattr():
 			raise Exception("checksum mismatch during load of dcattr from storage")	
 		# TODO Better verification here 
 		data=self.gpg.decrypt(content)
-		self.a=yaml.load(data)
-		if not self.doc.docid in self.a:
+		self.a=yaml.load(str(data))
+		if not self.doc.dcdocid in self.a:
 			raise Exception("Documentid must be stored in dataset!")	
 	def save(self):
 		dcattrsig=self.gpg.sign(yaml.dump(self.a, default_flow_style=False),
