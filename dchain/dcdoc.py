@@ -238,3 +238,35 @@ class dcdoc():
 				ctype=mime.buffer(self.content)
 			self.dcattr_add("content-type", ctype, "set via content_type() param")
 			return ctype
+	def newer_version(self):
+		if self.newer_version:
+			return self.newer_version
+		for docid in self.dcattr_values('newer_version'):
+			self.newer_version=dcdocs(docid=docid, storage=self.storage, config=self.config)
+			return self.newer_version
+		return None
+	def older_version(self):
+		if self.older_version:
+			return self.older_version
+		for docid in self.dcattr_values('older_version'):
+			self.older_version=dcdocs(docid=docid, storage=self.storage, config=self.config)
+			return self.older_version
+		return None
+	def sources(self):
+		if not self.source_docs:
+			self.source_docs={}
+		sdocs=[]
+		for docid in self.dcattr_values('source'):
+			if not docid in self.source_docs:
+				self.source_docs[docid]=dcdocs(docid=docid, storage=self.storage, config=self.config)
+			sdocs.append(self.source_docs[docid])
+		return sdocs
+	def attachments(self):
+		if not self.attached_docs:
+			self.attached_docs={}
+		adocs=[]
+		for docid in self.dcattr_values('attachment'):
+			if not docid in self.attached_docs:
+				self.attached_docs[docid]=dcdocs(docid=docid, storage=self.storage, config=self.config)
+			adocs.append(self.attached_docs[docid])
+		return adocs
