@@ -1,5 +1,6 @@
 import yaml
 import os
+__all__=['dcconf']
 
 class dcconf():
 	def __init__(self, 
@@ -25,8 +26,10 @@ class dcconf():
 			f=open(rcfile, "r")
 			rc=yaml.load(f.read())
 			f.close()
-			self.settings.update(rc['settings'])
-			self.storage.update(rc['storage'])
+			if 'settings' in rc:
+				self.settings.update(rc['settings'])
+			if 'storage' in rc:
+				self.storage.update(rc['storage'])
 	def update_storage(self):
 		for name in self.storage.keys():
 			self.storage[name].update(self.settings)	

@@ -6,12 +6,15 @@ import magic
 import yaml
 import re
 from datetime import datetime
-import .dcconf
-import .dcdoc
+import dchain.dcconf
+import dchain.dcdoc
+from dchain.dcconf import * 
+from dchain.dcconf import *
+__all__=['dcattr']
 
 
 
-class dcattr()
+class dcattr():
 	""" 
 	__init__
 	--------
@@ -26,6 +29,7 @@ class dcattr()
 	):
 		# link gpg over to this object
 		self.gpg=doc.gpg
+		self.dcattrid=''
 		if doc=='':
 			raise Exception("dcattr needs a dchains.doc object to do work")
 		self.doc=doc
@@ -33,7 +37,7 @@ class dcattr()
 			dcattrid=re.sub('\.dcattr$', '', dcattrfilename)
 		if dcattrid=='':
 			self.a={
-				doc.docid: {
+				doc.dcdocid: {
 					'name': name,
 					'value': value,
 					'comment': comment,
@@ -61,7 +65,7 @@ class dcattr()
 		if not self.doc.docid in self.a:
 			raise Exception("Documentid must be stored in dataset!")	
 	def save(self):
-		dcattrsig=gpg.sign(yaml.dump(self.a, default_flow_style=False),
+		dcattrsig=self.gpg.sign(yaml.dump(self.a, default_flow_style=False),
 			keyid=self.doc.keyid,
 		)
 		sha=hashlib.sha256()
@@ -76,7 +80,7 @@ class dcattr()
 		f.write(dcattrsig.data)
 		f.close()
 	def lookup(self, key):
-		return self.a[self.doc.docid][key]
+		return self.a[self.doc.dcdocid][key]
 	def value(self):
 		return self.lookup('value')
 	def name(self):

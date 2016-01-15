@@ -11,8 +11,9 @@ import sys, os
 import magic
 import yaml
 from datetime import datetime
-import .dcattr
-import .dcconf
+from dchain.dcattr import * 
+from dchain.dcconf import *
+__all__=['dcdoc']
 
 """
 class dcdoc()
@@ -39,7 +40,7 @@ class dcdoc():
 	"""
 	def __init__(self, filename='', dcdocid='', content='',
 		storage="default",
-		config=dchain.dcconf(),
+		config=dcconf(),
 	):
 		# copy all that neccessary stuff to self
 		self.filename=filename
@@ -62,10 +63,10 @@ class dcdoc():
 		# content and a filename given
 		# there is something odd if we have both or none 
 		#  at initialization
-		if dcdocid=="" and fileaname=="" and content=="": 
+		if dcdocid=="" and filename=="" and content=="": 
 			raise Exception("please set either content or dcdocid or give a filename to load")
 		
-		if dcdocid!="" and fileaname!="": 
+		if dcdocid!="" and filename!="": 
 			raise Exception("filename and dcdocid was given")
 		
 		if dcdocid!="" and content!="": 
@@ -76,11 +77,10 @@ class dcdoc():
 	
 		if dcdocid!='':
 			self._load_dcdocid(dcdocid)
-		elif filename!='';
+		elif filename!='':
 			self._load_filename(filename)
-		elif content!='';
+		elif content!='':
 			self._load_content(content)
-
 	"""
 	store
 	-----
@@ -109,7 +109,7 @@ class dcdoc():
 	this internal method loads a filename into the objects content 
 	and continued with _load_content()
 	"""
-	def _load_filename(self, filename)
+	def _load_filename(self, filename):
 		if not os.path.exists(filename):
 			raise Exception("File "+filename+" does not exists!")
 		f=open(filename, "rb")
@@ -126,10 +126,10 @@ class dcdoc():
 		if content=='':
 			raise Exception("content is empty, thats stupid!")
 		self.content=content
-		sha.update(content)
+		self.sha.update(content)
 		if self.dcdocid=='':
-			self.dcdocid=sha.hexdigest()
-		elif self.dcdocid != sha.hexdigest():
+			self.dcdocid=self.sha.hexdigest()
+		elif self.dcdocid != self.sha.hexdigest():
 			raise Exception("uuups, we loaded a document to the content but its checksum does not match our dcdocid")
 		
 		# TODO as soon as I have the attributes ready, 
@@ -139,11 +139,11 @@ class dcdoc():
 		# there is not yet anything to do here yet 
 		# but to raise an exception if the document is not in the pool
 		if not os.path.exists(self.contentfile()):
-			raise Exception("this document ".self.contentfile()." does not exists in dchains storage")
+			raise Exception("this document "+self.contentfile()+" does not exists in dchains storage")
 		# TODO load attributes to object
 	def _load_dcattrs(self):
 		# as soon as we have a dcdocid we also have workdir()
-		for dcattr_file in os.listdir(self.workdir())
+		for dcattr_file in os.listdir(self.workdir()):
 			if re.match('.*\.dcattr$', dcattr_file):
 				self.append_dcattr(dcattr(self, dcattrfilename=dcattr_file))
 	def append_dcattr(self, dcattr):
@@ -170,8 +170,8 @@ class dcdoc():
 	def workdir(self):
 		if self.dcdocid == '':
 			raise Exception("no dcdocid which is needed to create the docdir/workdir")
-		if not self.docdir:
-			self.docdir=self.docid[0:8]+"/"+self.docid[8:16]+"/"+self.docid[16:24]+"/"+self.docid
+		if not hasattr(self, 'docdir'):
+			self.docdir=self.dcdocid[0:8]+"/"+self.dcdocid[8:16]+"/"+self.dcdocid[16:24]+"/"+self.dcdocid
 		workdir=self.storebase+self.docdir
 		if not os.path.isdir(workdir):
 			os.makedirs(workdir)
@@ -272,11 +272,11 @@ class dcdoc():
 				self.attached_docs[docid]=dcdocs(docid=docid, storage=self.storage, config=self.config)
 			adocs.append(self.attached_docs[docid])
 		return adocs
-	def add_attachment(self, doc, comment='via add_attachment() from '+self.docid):
+	def add_attachment(self, doc, comment='via add_attachment() from '):
 		# attach a document to this object
 		self.dcattr_add('attachment', doc.docid, comment)
 		doc.dcattr_add('source', self.docid, comment)
-	def add_source(self, doc, comment='via add_source from '+self.docid):
+	def add_source(self, doc, comment='via add_source from '):
 		# attach a document to this object
 		self.dcattr_add('source', doc.docid, comment)
 		doc.dcattr_add('attachment', self.docid, comment)

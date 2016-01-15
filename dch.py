@@ -1,7 +1,10 @@
 #!/usr/bin/python3
 import dchain.dcdoc
+import dchain.dcconf
+from dchain.dcdoc import *
 
-doc=dchain.dcdoc(filename="README.md")
+print("Hello")
+doc=dcdoc(filename="README.md")
 doc.save_all()
 doc.add_name("README.md")
 doc.add_tag("TestFile")
