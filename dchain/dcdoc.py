@@ -11,6 +11,8 @@ import sys, os
 import magic
 import yaml
 from datetime import datetime
+import .dcattr
+import .dcconf
 
 """
 class dcdoc()
@@ -169,7 +171,7 @@ class dcdoc():
 		if self.dcdocid == '':
 			raise Exception("no dcdocid which is needed to create the docdir/workdir")
 		if not self.docdir:
-			self.docdir=chksum[0:8]+"/"+chksum[8:16]+"/"+chksum[16:24]+"/"+chksum
+			self.docdir=self.docid[0:8]+"/"+self.docid[8:16]+"/"+self.docid[16:24]+"/"+self.docid
 		workdir=self.storebase+self.docdir
 		if not os.path.isdir(workdir):
 			os.makedirs(workdir)
@@ -270,3 +272,23 @@ class dcdoc():
 				self.attached_docs[docid]=dcdocs(docid=docid, storage=self.storage, config=self.config)
 			adocs.append(self.attached_docs[docid])
 		return adocs
+	def add_attachment(self, doc, comment='via add_attachment() from '+self.docid):
+		# attach a document to this object
+		self.dcattr_add('attachment', doc.docid, comment)
+		doc.dcattr_add('source', self.docid, comment)
+	def add_source(self, doc, comment='via add_source from '+self.docid):
+		# attach a document to this object
+		self.dcattr_add('source', doc.docid, comment)
+		doc.dcattr_add('attachment', self.docid, comment)
+	def names(self):
+		return self.dcattr_values("name")
+	def names_dict(self):
+		return self.dcattr_values_dict("name")
+	def tags(self):
+		return self.dcattr_values("tag")
+	def tags_dict(self):
+		return self.dcattr_values_dict("tag")
+	def add_name(self, name, comment="via add_name wizard"):
+		return self.dcattr_add('name', name, comment)
+	def add_tag(self, name, comment="via add_tag wizard"):
+		return self.dcattr_add('tag', name, comment)

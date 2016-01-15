@@ -6,6 +6,9 @@ import magic
 import yaml
 import re
 from datetime import datetime
+import .dcconf
+import .dcdoc
+
 
 
 class dcattr()

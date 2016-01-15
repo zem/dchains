@@ -1,7 +1,6 @@
 import yaml
 import os
 
-
 class dcconf():
 	def __init__(self, 
 		user_dchainsrc=os.environ["HOME"]+"/.dchainsrc",
