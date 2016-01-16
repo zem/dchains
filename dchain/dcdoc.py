@@ -201,6 +201,9 @@ class dcdoc():
 	def _require_memory_content(self):
 		if not hasattr(self, "content"):
 			self._load_filename(self.contentfile())
+			return
+		if self.content=='':
+			self._load_filename(self.contentfile())
 	def workdir(self):
 		if self.dcdocid == '':
 			raise Exception("no dcdocid which is needed to create the docdir/workdir")
