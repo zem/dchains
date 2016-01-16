@@ -27,5 +27,35 @@ Git does an amazing job for all documents that are evolving during their lifetim
 
 And now back to the code.. :) 
 
+Here is an example, it has one document already stored and then it attaches 
+another document to it:
+
+-----------------------------------
+
+#!/usr/bin/python3
+import dchain.dcdoc
+import dchain.dcconf
+from dchain.dcdoc import *
+
+print("Hello")
+doc=dcdoc(dcdocid="b225c5500f802a6dd29cc607fc03e9c3000804f1c7526a85d04c4a284208f9f3")
+doc.add_tag("TestFileTag2")
+
+print("Names:")
+print(doc.names())
+print("Tags:")
+print(doc.tags())
+
+print("Attaching dchains.py")
+doc2=dcdoc(filename="dchains.py")
+doc2.save_all()
+doc2.add_name("dchains.py")
+doc2.add_tag("ChainedDocument")
+doc.add_attachment(doc2)
+
+print("What is the name of my attachment?")
+print(doc.attachments()[0].names())
+
+------------------------------------------
 
 
