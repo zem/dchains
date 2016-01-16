@@ -84,16 +84,45 @@ class dcdoc():
 		elif content!='':
 			self._load_content(content)
 	"""
-	store
+	save
 	-----
 	stores the document and to the storage, or updates the stored document 
 	in the storage
 	"""
-	def save_all(self):
+	def save(self):
 		self.save_content()
 		self.sign()
-		#self.save_attributes()
-
+	def verify_signatures(self):
+		self.verified={}
+		for sig_file in os.listdir(self.workdir()):
+			if re.match('.*\.signature$', sig_file):
+				f=open(self.workdir()+"/"+sig_file, 'rb')
+				verified=self.gpg.verify_file(f, self.contentfile())
+				f.close()
+				if verified:
+					self.verified[verified.fingerprint]=verified
+					# PRINT Error or log stuff that the verification failed.... 
+					# if so 
+	def sign(self):
+		self._require_memory_content()
+		if not hasattr(self, "verified"):
+			self.verify_signatures()
+		signature=self.gpg.sign(self.content, 
+			detach=True, 
+			binary=True, 
+			keyid=self.keyid
+		)
+		if signature.fingerprint in self.verified:
+			# this document was already signed with our key
+			return
+		sha=hashlib.sha256()
+		sha.update(signature.data)
+		sigfile=self.workdir()+"/"+sha.hexdigest()+".signature"
+		if os.path.exists(sigfile):
+			raise Exception("signature "+sigfile+" is already there")
+		f=open(sigfile, "wb")
+		f.write(signature.data)
+		f.close()
 	def save_content(self):
 		# store the document and all its objects 
 		# to the repository
@@ -135,12 +164,14 @@ class dcdoc():
 			raise Exception("uuups, we loaded a document to the content but its checksum does not match our dcdocid")
 		# load attributes, too if there are any
 		self._load_dcattrs()
-		
 	def _load_dcdocid(self, dcdocid):
 		# there is not yet anything to do here yet 
 		# but to raise an exception if the document is not in the pool
 		if not os.path.exists(self.contentfile()):
 			raise Exception("this document "+self.contentfile()+" does not exists in dchains storage")
+		self.verify_signatures()
+		if len(self.verified.keys()) < 1:
+			raise Exception("found no verifyable signature for this document")
 		# load attributes to object
 		self._load_dcattrs()
 	def _load_dcattrs(self):
@@ -168,7 +199,7 @@ class dcdoc():
 					else:
 						index=index+1
 	def _require_memory_content(self):
-		if self.content=="":
+		if not hasattr(self, "content"):
 			self._load_filename(self.contentfile())
 	def workdir(self):
 		if self.dcdocid == '':
@@ -181,21 +212,6 @@ class dcdoc():
 		return(workdir)
 	def contentfile(self):
 		return(self.workdir()+"/"+self.dcdocid+".dat")
-	def sign(self):
-		self._require_memory_content()
-		signature=self.gpg.sign(self.content, 
-			detach=True, 
-			binary=True, 
-			keyid=self.keyid
-		)
-		sha=hashlib.sha256()
-		sha.update(signature.data)
-		sigfile=self.workdir()+"/"+sha.hexdigest()+".signature"
-		if os.path.exists(sigfile):
-			raise Exception("signature "+sigfile+" is already there")
-		f=open(sigfile, "wb")
-		f.write(signature.data)
-		f.close()
 	def dcattr_values_dict(self, name):
 		names={}
 		for a in self.dcattr_by_name[name]:
