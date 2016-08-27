@@ -1,0 +1,34 @@
+* Proposal
+How we could add a better amount of security on a dchains server
+** Access to dchains via own protocol or via https service depending on what is the easiest 
+** Clients much like git, they can check out a certain set of attributes 
+** One File gets uploaded by Using AES Key, without having any attributes, same object is same file. 
+** Versioning happens on Object Basis. 
+   AES Key > Encrypted for User 
+   attribute messages Signed By User -> Encrypted for userbase.
+   Blockchained attribute messages (means: yes we know about the older version)
+   maybe ecdsa foo
+** seperate Info Folder, collecting all the controll messages for one object
+** uploads are always made encrypted for the servers Public Key
+   server  then reencrypts to decide who receives.
+** Server also checks signatures of upload. 
+** Server removes dead recipients 
+** Server does not know if attribute makes sense   
+*** but a new attr must be from one of the files owners
+*** Also new attr may reference the last one 
+*** Server can also sign the latest attribute when it repacks it.    
+    So Attr Signs stay valid when a key is lost. Maybe this is not an issue with a blockchain
+
+
+--signed--
+--- 
+version: OBJECT_ID (HASH)
+aeskey: SOME_RANDOMDATA
+--signed--
+** The Server receives all the packages and orderes so that the clients may checkout anonymously 
+** also the server makes xapian indexes 
+** should be easy to install therefore it should work over ssh as well as https
+** Server and storage are seperated!!! Server does not need to be on the same Machine as the Storage 
+** Leads to two components, STORAGE SERVER and SERVICE Daemon
+
+Single Write only storage Component. 
