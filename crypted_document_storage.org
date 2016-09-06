@@ -32,3 +32,16 @@ aeskey: SOME_RANDOMDATA
 ** Leads to two components, STORAGE SERVER and SERVICE Daemon
 
 Single Write only storage Component. 
+
+* Drawbacks
+the service daemon knows lots of things about the storage. Everything in Fact. 
+So it definately has to be kept save 
+** You may try to attack the Service daemon by using file format exploids. 
+** You may also try to break cryptography by storing a file you know and associate an object with it. 
+*** Objects are not size scrambled so they may be locateable 
+** The SERVICE does have write access on the storage (does it?) 
+   It is the only one that can delete file can drop objects from being populated
+
+* Better thinking: 
+
+** separate STORAGE, CONTROL and REVOKE services.
