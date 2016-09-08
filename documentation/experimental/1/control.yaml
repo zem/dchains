@@ -1,0 +1,32 @@
+---
+# if this cant decrypt everything it is an invalid/old control. 
+# if there is data missing, someone messed it up 
+datakey:
+  'e11ee56404197565496ed1f2a0366f97d8b8e303a9b499b017b8f3a34559a13f': "somesecretkey"
+  'e11ee56404197565496ed1f2a0366f97d8b8e303a9b499b017b8f3a3jwkslaak': "anotherscretkey"
+datasig:
+  'fileid':
+    'anotherfileid': 'secretkey'
+dcattr:
+  - comment: this doc should be xapian indexed 
+    name: tag
+    value: xapian
+    ts: '2016-01-16 01:18:02.518167'
+  - comment: foo
+    name: tag
+    value: testfile2
+    ts: '2016-01-16 01:18:02.518167'
+  - comment: from mime foo
+    name: mime
+    value: testvalue
+    ts: '2016-01-16 01:18:02.518167'
+  - comment: from mime foo
+    name: attachment
+    # this file is derived from that other object here.... 
+    value: 4edb62394bf55c2160123b3089998e93e226cab67d0d214092cc0a682ff0c14c
+    ts: '2016-01-16 01:18:02.518167'
+# as a downloadable list
+oldcontrol:
+  - '282a545d286af6b8031179e4885d454511f83e9781c916da01d581sjjdmmskah': "keyforcontrol"
+# this is to have all the oldcontrols also readable.
+key: 'keyforthisfilehere'
